@@ -9,7 +9,7 @@ struct GLBViewerApp: App {
         PartComponent.registerComponent()
     }
 
-    var body: some Scene {
+    var body: some SwiftUI.Scene {
         // Control panel: file loading, product structure, view operations.
         WindowGroup(id: "controls") {
             ControlPanelView()
