@@ -41,10 +41,13 @@ jobs:
       - name: Build and test
         run: |
           set -o pipefail
+          # Several visionOS runtimes are installed; pin the one that matches the SDK being built against.
+          SDK_VERSION=$(xcrun --sdk xrsimulator --show-sdk-version)
+          echo "Using visionOS simulator $SDK_VERSION"
           xcodebuild test \
             -project GLBViewer.xcodeproj \
             -scheme GLBViewer \
-            -destination 'platform=visionOS Simulator,name=Apple Vision Pro' \
+            -destination "platform=visionOS Simulator,name=Apple Vision Pro,OS=$SDK_VERSION" \
             CODE_SIGNING_ALLOWED=NO \
             2>&1 | tee build.log
 
