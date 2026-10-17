@@ -1,0 +1,63 @@
+name: visionOS build
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: visionos-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Toolchain versions
+        run: |
+          xcodebuild -version
+          swift --version
+          xcrun simctl list runtimes
+
+      - name: Install the visionOS simulator runtime if the image lacks it
+        run: |
+          if ! xcrun simctl list runtimes | grep -qi visionOS; then
+            xcodebuild -downloadPlatform visionOS
+          fi
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Check the sample GLB is reproducible
+        run: |
+          python3 Tools/make_sample_glb.py /tmp/GearboxAssembly.glb
+          cmp /tmp/GearboxAssembly.glb Samples/GearboxAssembly.glb
+
+      - name: Generate the Xcode project
+        run: xcodegen generate
+
+      - name: Build and test
+        run: |
+          set -o pipefail
+          # Several visionOS runtimes are installed; pin the one that matches the SDK being built against.
+          SDK_VERSION=$(xcrun --sdk xrsimulator --show-sdk-version)
+          echo "Using visionOS simulator $SDK_VERSION"
+          xcodebuild test \
+            -project GLBViewer.xcodeproj \
+            -scheme GLBViewer \
+            -destination "platform=visionOS Simulator,name=Apple Vision Pro,OS=$SDK_VERSION" \
+            CODE_SIGNING_ALLOWED=NO \
+            2>&1 | tee build.log
+
+      - name: Show compiler errors
+        if: failure()
+        run: |
+          grep -E "error:|\*\* (BUILD|TEST) FAILED" build.log | sort -u | head -80 || true
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: build-log
+          path: build.log

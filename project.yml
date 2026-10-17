@@ -1,0 +1,54 @@
+name: GLBViewer
+options:
+  bundleIdPrefix: com.example
+  deploymentTarget:
+    visionOS: "2.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    SWIFT_STRICT_CONCURRENCY: minimal
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+targets:
+  GLBViewer:
+    type: application
+    platform: visionOS
+    sources:
+      - path: Sources/GLBViewer
+      - path: Samples
+        buildPhase: resources
+    info:
+      path: Sources/GLBViewer/Info.plist
+      properties:
+        CFBundleDisplayName: GLB Viewer
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: true
+          UISceneConfigurations: {}
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.GLBViewer
+        TARGETED_DEVICE_FAMILY: "7"
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
+  GLBViewerTests:
+    type: bundle.unit-test
+    platform: visionOS
+    sources:
+      - path: Tests/GLBViewerTests
+    dependencies:
+      - target: GLBViewer
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.example.GLBViewerTests
+        GENERATE_INFOPLIST_FILE: YES
+schemes:
+  GLBViewer:
+    build:
+      targets:
+        GLBViewer: all
+    run:
+      config: Debug
+    test:
+      config: Debug
+      targets:
+        - GLBViewerTests
